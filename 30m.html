@@ -11,17 +11,33 @@
   <title>EdiTrader 30 MIN</title>
   <style>
     html, body { margin: 0; padding: 0; width: 100%; height: 100%; background: #0b0b0b; color: #eee; font-family: Helvetica, Arial, sans-serif; overflow: hidden; -webkit-user-select: none; }
-    #wrap { position: absolute; top: 0; right: 0; bottom: 0; left: 0; padding: 12px 16px 8px; }
-    #topo { overflow: hidden; height: 52px; }
-    #titulo { float: left; font-size: 16px; letter-spacing: 2px; color: #888; padding-top: 14px; }
-    #preco { float: right; font-size: 42px; font-weight: bold; line-height: 1.1; }
-    #sub { text-align: right; font-size: 16px; color: #888; margin: 0 0 6px; clear: both; }
-    #canvaswrap { position: absolute; left: 16px; right: 16px; top: 88px; bottom: 36px; }
+    #wrap { position: absolute; top: 0; right: 0; bottom: 0; left: 0; padding: 10px 16px 6px; }
+    #topo { overflow: hidden; height: 48px; }
+    #titulo { float: left; font-size: 15px; letter-spacing: 2px; color: #888; padding-top: 12px; }
+    #preco { float: right; font-size: 40px; font-weight: bold; line-height: 1.1; }
+    #sub { float: right; clear: both; font-size: 15px; color: #888; margin: 0 0 4px; }
+    #extra { font-size: 15px; color: #b388ff; margin: 0 0 4px; }
+    #canvaswrap { position: absolute; left: 16px; right: 16px; top: 96px; bottom: 34px; }
     #c { display: block; width: 100%; height: 100%; background: #0d0d0d; }
-    #rodape { position: absolute; left: 16px; right: 16px; bottom: 8px; font-size: 13px; color: #666; }
+    #rodape { position: absolute; left: 16px; right: 16px; bottom: 6px; font-size: 12px; color: #666; }
     #hora { float: right; }
     #leg { float: left; }
     .pt { display: inline-block; width: 8px; height: 8px; margin: 0 4px 0 10px; }
+    #touro, #urso {
+      position: absolute;
+      width: 130px;
+      height: 90px;
+      bottom: 42px;
+      z-index: 2;
+      opacity: 0.22;
+      -webkit-transition: opacity 0.4s;
+    }
+    #touro { left: 22px; }
+    #urso { right: 22px; }
+    body.alta #touro { opacity: 0.85; }
+    body.baixa #urso { opacity: 0.85; }
+    body.alta #urso { opacity: 0.12; }
+    body.baixa #touro { opacity: 0.12; }
   </style>
 </head>
 <body>
@@ -31,13 +47,27 @@
       <div id="preco">—</div>
     </div>
     <div id="sub"></div>
+    <div id="extra"></div>
     <div id="canvaswrap"><canvas id="c" width="980" height="420"></canvas></div>
+    <svg id="touro" viewBox="0 0 200 140" xmlns="http://www.w3.org/2000/svg">
+      <path fill="#2ecc71" d="M20 95 L38 78 L48 82 L58 70 L78 62 L88 48 L82 28 L98 42 L112 22 L118 40 L138 48 L158 70 L178 78 L186 98 L170 108 L152 102 L140 118 L118 122 L92 118 L70 122 L52 112 L28 108 Z"/>
+      <circle fill="#0b0b0b" cx="150" cy="78" r="4"/>
+      <path fill="#2ecc71" d="M78 62 L70 38 L88 48"/>
+      <path fill="#2ecc71" d="M112 22 L108 8 L118 40"/>
+    </svg>
+    <svg id="urso" viewBox="0 0 200 140" xmlns="http://www.w3.org/2000/svg">
+      <path fill="#e74c3c" d="M30 70 L48 48 L70 42 L88 22 L108 38 L128 20 L148 42 L168 58 L182 82 L170 108 L148 118 L128 110 L108 122 L82 118 L58 122 L42 108 L28 92 Z"/>
+      <circle fill="#0b0b0b" cx="58" cy="68" r="4"/>
+      <path fill="#c0392b" d="M70 42 L62 18 L88 22"/>
+      <path fill="#c0392b" d="M128 20 L138 6 L148 42"/>
+    </svg>
     <div id="rodape">
       <div id="leg">
         <span class="pt" style="background:#f1c40f"></span>M9
         <span class="pt" style="background:#e74c3c"></span>M21
         <span class="pt" style="background:#3498db"></span>M50
         <span class="pt" style="background:#fff"></span>M200
+        <span class="pt" style="background:#b388ff"></span>RSI
       </div>
       <div id="hora"></div>
     </div>
