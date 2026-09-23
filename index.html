@@ -1,26 +1,458 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>EdiTrader — quadros</title>
-  <style>
-    body { margin: 0; background: #111; color: #eee; font-family: Helvetica, Arial, sans-serif; padding: 24px; }
-    h1 { font-size: 22px; letter-spacing: 2px; color: #888; font-weight: normal; }
-    a { display: block; background: #1a1a1a; color: #fff; text-decoration: none; padding: 18px; margin: 10px 0; font-size: 22px; border-left: 6px solid #f1c40f; }
-    p { color: #777; }
-  </style>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<meta http-equiv="refresh" content="180">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<title>EdiTrader · BTC</title>
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+  html, body { width:100%; height:100%; background:#07080a; color:#d8dce3; font-family:Helvetica Neue,Helvetica,Arial,sans-serif; overflow:hidden; }
+  .row { display:table; width:100%; table-layout:fixed; }
+  .cell { display:table-cell; vertical-align:middle; }
+  #bar {
+    height:40px; padding:0 16px;
+    background:#0b0d11;
+    border-bottom:1px solid #1c2230;
+  }
+  #bar img { height:26px; width:auto; vertical-align:middle; }
+  #brandName {
+    display:inline-block; vertical-align:middle; margin-left:10px;
+    font-size:13px; font-weight:bold; letter-spacing:4px; color:#c9a227;
+  }
+  #brandName i { font-style:normal; font-weight:normal; font-size:9px; letter-spacing:2px; color:#6e5a16; margin-left:8px; }
+  .stairs { float:right; margin-top:9px; }
+  #hero { padding:10px 16px 8px; border-bottom:1px solid #161b24; }
+  #pair { font-size:10px; letter-spacing:2px; color:#6b7380; }
+  #price { font-family:Courier New,monospace; font-size:40px; font-weight:bold; color:#f2f4f7; letter-spacing:-1px; }
+  #chg { font-family:Courier New,monospace; font-size:16px; margin-left:10px; }
+  #age, #alertLab { font-size:10px; color:#5c6570; margin-top:2px; }
+  #status {
+    text-align:right; padding:6px 0 6px 12px;
+  }
+  #status .lab { font-size:9px; letter-spacing:2px; color:#6b7380; }
+  #status .val { font-size:20px; font-weight:bold; letter-spacing:1px; }
+  #status .why { font-size:11px; color:#8b93a0; }
+  #mid { padding:10px 16px 0; }
+  #chartBox {
+    height:300px; position:relative;
+    background:#0a0c10;
+    border:1px solid #171c26;
+  }
+  #chartHead { position:absolute; left:10px; top:6px; font-size:10px; letter-spacing:1px; color:#5c6570; z-index:2; }
+  canvas { display:block; width:100%; height:100%; }
+  .side .card { margin:0 0 8px 8px; }
+  #bot { padding:8px 12px 0; }
+  #foot { padding:8px 16px 10px; font-size:10px; color:#4b5563; letter-spacing:1px; }
+  .card {
+    background:#0d1016;
+    border:1px solid #171c26;
+    border-top:2px solid #2a3344;
+    padding:8px 10px;
+    margin:0 4px;
+  }
+  .k { font-size:9px; color:#6b7380; letter-spacing:1.5px; text-transform:uppercase; }
+  .v { font-family:Courier New,monospace; font-size:18px; font-weight:bold; margin-top:3px; color:#e8edf4; }
+  .s { font-size:10px; color:#6b7380; margin-top:2px; }
+  .g { color:#3ecf8e; } .r { color:#f0616d; } .y { color:#d4af37; } .w { color:#e8edf4; }
+  a { color:#c9a227; text-decoration:none; }
+  #err { color:#f0616d; }
+  #alertBtn { color:#c9a227; }
+  #flash {
+    display:none; position:absolute; left:16px; right:16px; top:48px;
+    padding:14px; text-align:center; z-index:9;
+    font-size:22px; font-weight:bold; background:#3a1014; color:#fff;
+    border:1px solid #f0616d;
+  }
+</style>
 </head>
 <body>
-  <h1>EDITRADER</h1>
-  <p>Abra no iPad o tempo da moldura e use Adicionar a Tela de Inicio.</p>
-  <a href="5m.html">5 minutos</a>
-  <a href="30m.html">30 minutos</a>
-  <a href="1h.html">1 hora</a>
-  <a href="4h.html">4 horas</a>
-  <a href="1d.html">24 horas</a>
-  <a href="1w.html">1 semana</a>
-  <a href="1mes.html">1 mes</a>
-  <a href="1a.html">1 ano</a>
+  <div id="flash"></div>
+  <audio id="beep" preload="auto">
+    <source src="data:audio/wav;base64,UklGRl9vT1NFIAAAAAASUkZGVAAA" />
+  </audio>
+  <div id="bar">
+    <img src="logo.png" alt="">
+    <span id="brandName">EDITRADER<i>EM DESTAQUE</i></span>
+    <svg class="stairs" width="72" height="22" viewBox="0 0 72 22">
+      <rect x="0" y="16" width="10" height="6" fill="#8a7018"/>
+      <rect x="12" y="12" width="10" height="10" fill="#b8942a"/>
+      <rect x="24" y="8" width="10" height="14" fill="#c9a227"/>
+      <rect x="36" y="4" width="10" height="18" fill="#d4af37"/>
+      <path d="M50 14 L62 3 L58 3 L58 0 L72 0 L72 8 L68 8 L50 18 Z" fill="#d4af37"/>
+    </svg>
+  </div>
+  <div id="hero" class="row">
+    <div class="cell" style="width:58%;">
+      <div id="pair">BTC / USDT &nbsp;·&nbsp; SPOT &nbsp;·&nbsp; <span id="alertBtn">ALERTA</span></div>
+      <div><span id="price">—</span><span id="chg"></span></div>
+      <div id="age">--:--:--</div>
+      <div id="alertLab">alerta desligado</div>
+    </div>
+    <div class="cell" style="width:42%;">
+      <div id="status">
+        <div class="lab">SINAL</div>
+        <div class="val" id="stVal">CARREGANDO</div>
+        <div class="why" id="stWhy">binance</div>
+      </div>
+    </div>
+  </div>
+
+  <div id="mid" class="row">
+    <div class="cell" style="width:68%; height:100%;">
+      <div id="chartBox">
+        <div id="chartHead">VELAS 15m · toque para 5m / 15m / 1h / 4h</div>
+        <canvas id="cv"></canvas>
+      </div>
+    </div>
+    <div class="cell side" style="width:32%; padding-left:6px;">
+      <div class="card"><div class="k">MACD 5m</div><div class="v" id="m5">—</div><div class="s" id="m5s"></div></div>
+      <div class="card"><div class="k">MACD 15m</div><div class="v" id="m15">—</div><div class="s" id="m15s"></div></div>
+      <div class="card"><div class="k">MACD 4h</div><div class="v" id="m4h">—</div><div class="s" id="m4hs"></div></div>
+    </div>
+  </div>
+
+  <div id="bot" class="row">
+    <div class="cell">
+      <div class="card"><div class="k">RSI 1h</div><div class="v" id="r1h">—</div><div class="s" id="r1hs"></div></div>
+    </div>
+    <div class="cell">
+      <div class="card"><div class="k">RSI 4h SNIPER</div><div class="v" id="r4h">—</div><div class="s" id="r4hs"></div></div>
+    </div>
+    <div class="cell">
+      <div class="card"><div class="k">SMA 365d</div><div class="v" id="s365">—</div><div class="s" id="s365s"></div></div>
+    </div>
+    <div class="cell">
+      <div class="card"><div class="k">SMA 200w</div><div class="v" id="s200w">—</div><div class="s" id="s200ws"></div></div>
+    </div>
+    <div class="cell">
+      <div class="card"><div class="k">CICLO</div><div class="v" id="ciclo">—</div><div class="s" id="ciclos"></div></div>
+    </div>
+  </div>
+  <div id="foot" class="row">
+    <div class="cell" id="err"></div>
+    <div class="cell" style="text-align:right"><a href="ciclo.html" style="color:#ffd166">abrir ciclo macro →</a></div>
+  </div>
+
+<script>
+var BASE='https://api.binance.com/api/v3';
+var chartTF='15m';
+var chartRows=null;
+var tfs=['5m','15m','1h','4h'];
+
+function $(id){ return document.getElementById(id); }
+function xhr(url, cb){
+  var x=new XMLHttpRequest();
+  x.open('GET',url,true);
+  x.onreadystatechange=function(){
+    if(x.readyState===4){
+      if(x.status===200){ try{ cb(null, JSON.parse(x.responseText)); }catch(e){ cb(e);} }
+      else cb(new Error('HTTP '+x.status));
+    }
+  };
+  x.onerror=function(){ cb(new Error('rede')); };
+  x.send(null);
+}
+function ema(values, period){
+  var k=2/(period+1), out=[], prev=values[0], i;
+  out[0]=prev;
+  for(i=1;i<values.length;i++){ prev=values[i]*k+prev*(1-k); out[i]=prev; }
+  return out;
+}
+function macdLast(closes){
+  if(closes.length<35) return null;
+  var e12=ema(closes,12), e26=ema(closes,26), macd=[], i;
+  for(i=0;i<closes.length;i++) macd[i]=e12[i]-e26[i];
+  var sig=ema(macd,9), n=closes.length-1;
+  var line=macd[n], signal=sig[n], hist=line-signal;
+  return {line:line,signal:signal,hist:hist,pos:hist>=0};
+}
+function rsiLast(closes, period){
+  period=period||14;
+  if(closes.length<period+1) return null;
+  var g=0,l=0,i,d;
+  for(i=1;i<=period;i++){ d=closes[i]-closes[i-1]; if(d>=0)g+=d; else l-=d; }
+  var ag=g/period, al=l/period;
+  for(i=period+1;i<closes.length;i++){
+    d=closes[i]-closes[i-1];
+    ag=(ag*(period-1)+(d>0?d:0))/period;
+    al=(al*(period-1)+(d<0?-d:0))/period;
+  }
+  if(al===0) return 100;
+  return 100-(100/(1+ag/al));
+}
+function sma(values,n){
+  if(values.length<n) return null;
+  var s=0,i; for(i=values.length-n;i<values.length;i++) s+=values[i];
+  return s/n;
+}
+function fmtP(n){
+  if(n==null||isNaN(n)) return '—';
+  n=Math.round(n); var s=String(n),out='',c=0,i;
+  for(i=s.length-1;i>=0;i--){ out=s.charAt(i)+out; c++; if(c===3&&i>0){out=','+out;c=0;} }
+  return '$'+out;
+}
+function fmtN(n,d){
+  if(n==null||isNaN(n)) return '—';
+  d=d==null?2:d; var m=Math.pow(10,d);
+  return (Math.round(n*m)/m).toFixed(d);
+}
+function pct(a,b){ if(!a||!b) return null; return (a-b)/b*100; }
+function setTxt(id,t,cls){ var el=$(id); el.innerHTML=t; el.className='v '+(cls||'w'); }
+function nowStr(){
+  var d=new Date(); function z(n){return n<10?'0'+n:n;}
+  return z(d.getHours())+':'+z(d.getMinutes())+':'+z(d.getSeconds());
+}
+function closesFromKlines(kl){
+  var a=[],i; for(i=0;i<kl.length;i++) a.push(parseFloat(kl[i][4])); return a;
+}
+
+var state={price:null,chg:null,m5:null,m15:null,m4h:null,r1h:null,r4h:null,s365:null,s200w:null};
+var alertAbove=null, alertBelow=null, alertArmed=false, soundOn=false, lastAlertAt=0;
+
+function parseNum(s){
+  if(!s) return null;
+  s=String(s).replace(/[^0-9.,]/g,'').replace(',','.');
+  var n=parseFloat(s);
+  return isNaN(n)?null:n;
+}
+function loadAlerts(){
+  try{
+    if(window.localStorage){
+      alertAbove=parseNum(localStorage.getItem('ab'));
+      alertBelow=parseNum(localStorage.getItem('be'));
+    }
+  }catch(e){}
+  var q=location.search||'';
+  function qp(name){
+    var m=q.match(new RegExp('[?&]'+name+'=([^&]+)'));
+    return m?decodeURIComponent(m[1]):null;
+  }
+  if(qp('acima')) alertAbove=parseNum(qp('acima'));
+  if(qp('abaixo')) alertBelow=parseNum(qp('abaixo'));
+  showAlertLab();
+}
+function saveAlerts(){
+  try{
+    if(window.localStorage){
+      if(alertAbove!=null) localStorage.setItem('ab', String(alertAbove));
+      else localStorage.removeItem('ab');
+      if(alertBelow!=null) localStorage.setItem('be', String(alertBelow));
+      else localStorage.removeItem('be');
+    }
+  }catch(e){}
+  showAlertLab();
+}
+function showAlertLab(){
+  var t=[];
+  if(alertAbove!=null) t.push('acima '+fmtP(alertAbove));
+  if(alertBelow!=null) t.push('abaixo '+fmtP(alertBelow));
+  $('alertLab').innerHTML = t.length? ('alerta: '+t.join(' · ')) : 'alerta desligado · toque em alerta';
+}
+function beep(){
+  if(!soundOn) return;
+  try{
+    var a=document.getElementById('beep');
+    if(a){ a.currentTime=0; a.play(); }
+  }catch(e){}
+}
+function fireAlert(msg){
+  var now=+new Date();
+  if(now-lastAlertAt<60000) return;
+  lastAlertAt=now;
+  var fl=$('flash');
+  fl.style.display='block';
+  fl.innerHTML=msg;
+  beep();
+  setTimeout(function(){ fl.style.display='none'; }, 8000);
+}
+function checkAlert(){
+  if(state.price==null) return;
+  if(alertAbove!=null && state.price>=alertAbove)
+    fireAlert('ALERTA · BTC ACIMA DE '+fmtP(alertAbove)+' · agora '+fmtP(state.price));
+  if(alertBelow!=null && state.price<=alertBelow)
+    fireAlert('ALERTA · BTC ABAIXO DE '+fmtP(alertBelow)+' · agora '+fmtP(state.price));
+}
+function setupAlert(){
+  soundOn=true;
+  var a=prompt('Preço ACIMA para alertar (vazio = manter, 0 = limpar)', alertAbove||'');
+  if(a!==null){
+    if(a===''||a==='0') alertAbove=null;
+    else alertAbove=parseNum(a);
+  }
+  var b=prompt('Preço ABAIXO para alertar (vazio = manter, 0 = limpar)', alertBelow||'');
+  if(b!==null){
+    if(b===''||b==='0') alertBelow=null;
+    else alertBelow=parseNum(b);
+  }
+  saveAlerts();
+  alert('Som liberado neste Safari.\nAcima: '+(alertAbove||'—')+'\nAbaixo: '+(alertBelow||'—'));
+}
+
+function paintMacd(id,sid,m){
+  if(!m){ setTxt(id,'—'); $(sid).innerHTML=''; return; }
+  setTxt(id, m.pos?'VERDE':'VERMELHO', m.pos?'g':'r');
+  $(sid).innerHTML='hist '+fmtN(m.hist,2);
+}
+
+function decide(){
+  var m4=state.m4h,r1=state.r1h,r4=state.r4h;
+  var box=$('status'),val=$('stVal'),why=$('stWhy');
+  if(!m4||r1==null||r4==null){
+    box.style.background='#222'; val.innerHTML='AGUARDANDO'; why.innerHTML='indicadores incompletos'; return;
+  }
+  if(r4<30){
+    box.style.background='#1a3a1a'; val.className='val g'; val.innerHTML='SNIPER';
+    why.innerHTML='RSI 4h '+fmtN(r4,1)+' sobrevenda extrema'; return;
+  }
+  if(r1>=70||r4>=70){
+    box.style.background='#3a1a1a'; val.className='val r'; val.innerHTML='PAUSA';
+    why.innerHTML='RSI sobrecompra · sem long novo'; return;
+  }
+  if(!m4.pos){
+    box.style.background='#3a1a1a'; val.className='val r'; val.innerHTML='PAUSA';
+    why.innerHTML='MACD 4h negativo · sem compra fracionada'; return;
+  }
+  box.style.background='#0d2a18'; val.className='val g'; val.innerHTML='COMPRA FRACIONADA';
+  why.innerHTML='MACD 4h verde · RSI fora de topo';
+}
+
+function paint(){
+  if(state.price){
+    $('price').innerHTML=fmtP(state.price);
+    var c=state.chg, el=$('chg');
+    if(c==null) el.innerHTML='';
+    else { el.innerHTML=(c>=0?'+':'')+fmtN(c,2)+'%'; el.className=c>=0?'g':'r'; }
+  }
+  paintMacd('m5','m5s',state.m5);
+  paintMacd('m15','m15s',state.m15);
+  paintMacd('m4h','m4hs',state.m4h);
+  if(state.r1h!=null){
+    setTxt('r1h',fmtN(state.r1h,1), state.r1h>=70?'r':(state.r1h<=30?'g':'w'));
+    $('r1hs').innerHTML=state.r1h>=70?'bloqueia long':(state.r1h<=30?'folga':'neutro');
+  }
+  if(state.r4h!=null){
+    setTxt('r4h',fmtN(state.r4h,1), state.r4h>=70?'r':(state.r4h<=30?'g':'w'));
+    $('r4hs').innerHTML=state.r4h<30?'gatilho sniper':(state.r4h>=70?'topo':'normal');
+  }
+  if(state.s365&&state.price){
+    var p=pct(state.price,state.s365);
+    setTxt('s365',fmtP(state.s365),p>=0?'g':'r');
+    $('s365s').innerHTML=(p>=0?'acima ':'abaixo ')+fmtN(Math.abs(p),1)+'%';
+    setTxt('ciclo', state.price>=state.s365?'BULL TEC.':'ABAIXO 365d', state.price>=state.s365?'g':'y');
+    $('ciclos').innerHTML=state.price>=state.s365?'acima da média 1 ano':'sob a média 1 ano';
+  }
+  if(state.s200w&&state.price){
+    p=pct(state.price,state.s200w);
+    setTxt('s200w',fmtP(state.s200w),p>=0?'g':'r');
+    $('s200ws').innerHTML=(p>=0?'acima ':'abaixo ')+fmtN(Math.abs(p),1)+'%';
+  }
+  $('age').innerHTML=nowStr();
+  decide();
+  checkAlert();
+}
+
+function drawCandles(rows){
+  var cv=$('cv');
+  if(!cv || !rows || !rows.length) return;
+  var box=$('chartBox');
+  var w=box.clientWidth, h=box.clientHeight;
+  if(w<10||h<10){ w=640; h=280; }
+  cv.width=w; cv.height=h;
+  var ctx=cv.getContext('2d');
+  ctx.fillStyle='#0a0a0a';
+  ctx.fillRect(0,0,w,h);
+  var n=rows.length, i, hi=-1e12, lo=1e12;
+  for(i=0;i<n;i++){
+    var hh=parseFloat(rows[i][2]), ll=parseFloat(rows[i][3]);
+    if(hh>hi) hi=hh; if(ll<lo) lo=ll;
+  }
+  var pad=hi-lo; if(pad<=0) pad=1;
+  hi+=pad*0.06; lo-=pad*0.06;
+  var span=hi-lo;
+  var left=6, right=6, top=18, bot=8;
+  var cw=w-left-right, ch=h-top-bot;
+  ctx.strokeStyle='#1c1c1c'; ctx.lineWidth=1;
+  for(i=0;i<4;i++){
+    var y=top+ch*i/3;
+    ctx.beginPath(); ctx.moveTo(left,y); ctx.lineTo(left+cw,y); ctx.stroke();
+    ctx.fillStyle='#555'; ctx.font='10px Helvetica';
+    ctx.fillText(fmtP(hi-span*i/3), left+4, y+11);
+  }
+  var gap=cw/n;
+  var body=Math.max(2, gap*0.62);
+  for(i=0;i<n;i++){
+    var o=parseFloat(rows[i][1]), hh=parseFloat(rows[i][2]), ll=parseFloat(rows[i][3]), c=parseFloat(rows[i][4]);
+    var up=c>=o;
+    var x=left+i*gap+gap/2;
+    function Y(p){ return top+ch*(hi-p)/span; }
+    ctx.strokeStyle=up?'#3ddc84':'#ff5a5a';
+    ctx.beginPath(); ctx.moveTo(x,Y(hh)); ctx.lineTo(x,Y(ll)); ctx.stroke();
+    var y1=Y(o), y2=Y(c);
+    var topB=Math.min(y1,y2), bh=Math.max(1, Math.abs(y2-y1));
+    ctx.fillStyle=up?'#3ddc84':'#ff5a5a';
+    ctx.fillRect(x-body/2, topB, body, bh);
+  }
+  $('chartHead').innerHTML='VELAS '+chartTF+' · toque para trocar timeframe';
+}
+
+function loadTicker(done){
+  xhr(BASE+'/ticker/24hr?symbol=BTCUSDT', function(err,d){
+    if(err){ done(err); return; }
+    state.price=parseFloat(d.lastPrice);
+    state.chg=parseFloat(d.priceChangePercent);
+    done();
+  });
+}
+function loadK(interval, limit, fn, done){
+  xhr(BASE+'/klines?symbol=BTCUSDT&interval='+interval+'&limit='+limit, function(err,d){
+    if(err){ done(err); return; }
+    fn(d); done();
+  });
+}
+
+var busy=false;
+function refresh(){
+  if(busy) return;
+  busy=true; $('err').innerHTML='';
+  var left=7, first=null;
+  function one(err){
+    if(err && !first) first=err;
+    left--;
+    if(left<=0){
+      busy=false;
+      if(first) $('err').innerHTML='falha: '+first.message;
+      paint();
+      drawCandles(chartRows);
+    }
+  }
+  loadTicker(one);
+  loadK('5m',80,function(d){ state.m5=macdLast(closesFromKlines(d)); },one);
+  loadK('15m',80,function(d){ state.m15=macdLast(closesFromKlines(d)); },one);
+  loadK('4h',80,function(d){ var c=closesFromKlines(d); state.m4h=macdLast(c); state.r4h=rsiLast(c,14); },one);
+  loadK('1h',80,function(d){ state.r1h=rsiLast(closesFromKlines(d),14); },one);
+  loadK('1d',400,function(d){ state.s365=sma(closesFromKlines(d),365); },one);
+  loadK(chartTF,48,function(d){ chartRows=d; },one);
+}
+function refreshWeekly(){
+  loadK('1w',220,function(d){ state.s200w=sma(closesFromKlines(d),200); paint(); },function(){});
+}
+
+$('chartBox').onclick=function(){
+  var i=0, k;
+  for(k=0;k<tfs.length;k++) if(tfs[k]===chartTF) i=k;
+  chartTF=tfs[(i+1)%tfs.length];
+  loadK(chartTF,48,function(d){ chartRows=d; drawCandles(chartRows); },function(){});
+};
+
+$('alertBtn').onclick=function(e){ if(e&&e.stopPropagation) e.stopPropagation(); setupAlert(); };
+loadAlerts();
+refresh();
+refreshWeekly();
+setInterval(refresh,30000);
+setInterval(refreshWeekly,600000);
+setTimeout(function(){ drawCandles(chartRows); },800);
+</script>
 </body>
 </html>

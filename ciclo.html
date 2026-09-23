@@ -1,0 +1,341 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<meta http-equiv="refresh" content="300">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<title>BTC Ciclo Macro</title>
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+  html, body { width:100%; height:100%; background:#000; color:#e8e8e8; font-family:Helvetica,Arial,sans-serif; overflow:hidden; }
+  body { padding:6px 10px; }
+  .row { display:table; width:100%; table-layout:fixed; }
+  .cell { display:table-cell; vertical-align:top; }
+  #brand { height:11%; }
+  #brand img { height:48px; width:auto; vertical-align:middle; }
+  #brandName {
+    display:inline-block; vertical-align:middle; margin-left:10px;
+    font-size:24px; font-weight:bold; letter-spacing:2px; color:#e8c36a;
+    text-shadow:0 0 8px rgba(232,195,106,.45);
+  }
+  #brandName small { display:block; font-size:10px; letter-spacing:3px; color:#b8943a; font-weight:normal; }
+  .stairs { display:inline-block; vertical-align:middle; margin-left:12px; }
+  #status { margin:10px 12px; padding:10px 14px; text-align:left; font-weight:bold; background:#0d1016; border:1px solid #171c26; border-left:4px solid #c9a227; }
+  #status .lab { font-size:9px; letter-spacing:2px; color:#6b7380; }
+  #status .val { font-family:Courier New,monospace; font-size:26px; line-height:1.15; }
+  #status .why { font-size:11px; color:#8b93a0; }
+  #chartBox { height:340px; background:#0a0a0a; border:1px solid #1a1a1a; position:relative; margin:0 12px 8px; }
+  #chartHead { position:absolute; left:8px; top:4px; font-size:11px; color:#888; z-index:2; }
+  canvas { display:block; width:100%; height:100%; }
+  .wrap { padding:0 8px; }
+  .card { background:#101010; border:1px solid #1c1c1c; padding:8px 10px; margin:0 4px; }
+  a { color:#d4af37; text-decoration:none; }
+  .k { font-size:10px; color:#888; text-transform:uppercase; }
+  .v { font-family:Courier New,monospace; font-size:18px; font-weight:bold; }
+  .s { font-size:11px; color:#999; margin-top:2px; }
+  .g { color:#3ddc84; } .r { color:#ff5a5a; } .y { color:#ffd166; } .w { color:#eee; } .c { color:#4ea2ff; }
+  #foot { font-size:11px; color:#666; padding-top:4px; }
+  #err { color:#ff8a8a; }
+  .sw { display:inline-block; width:10px; height:10px; margin-right:4px; }
+</style>
+</head>
+<body>
+  <div id="bar">
+    <img src="logo.png" alt="">
+    <span id="brandName">EDITRADER<i>EM DESTAQUE</i></span>
+    <svg class="stairs" width="72" height="22" viewBox="0 0 72 22">
+      <rect x="0" y="16" width="10" height="6" fill="#8a7018"/>
+      <rect x="12" y="12" width="10" height="10" fill="#b8942a"/>
+      <rect x="24" y="8" width="10" height="14" fill="#c9a227"/>
+      <rect x="36" y="4" width="10" height="18" fill="#d4af37"/>
+      <path d="M50 14 L62 3 L58 3 L58 0 L72 0 L72 8 L68 8 L50 18 Z" fill="#d4af37"/>
+    </svg>
+  </div>
+  <div id="status">
+    <div class="lab">CICLO MACRO · BITCOIN</div>
+    <div class="val" id="stVal">CARREGANDO</div>
+    <div class="why" id="stWhy">médias de 1 ano e 4 anos / 200 semanas</div>
+  </div>
+
+  <div id="chartBox">
+    <div id="chartHead">
+      velas semanais ·
+      <span class="g">■ 365d</span> ·
+      <span class="c">■ 1460d</span> ·
+      <span class="y">■ 200w</span>
+    </div>
+    <canvas id="cv"></canvas>
+  </div>
+
+  <div class="row">
+    <div class="cell">
+      <div class="card">
+        <div class="k">preço</div>
+        <div class="v w" id="price">—</div>
+        <div class="s" id="chg"></div>
+      </div>
+    </div>
+    <div class="cell">
+      <div class="card">
+        <div class="k">média 365 dias · divisor de águas</div>
+        <div class="v" id="s365">—</div>
+        <div class="s" id="s365s">rompimento + sustentação = bull técnico</div>
+      </div>
+    </div>
+    <div class="cell">
+      <div class="card">
+        <div class="k">média 1.460 dias · fundo de ciclo</div>
+        <div class="v" id="s1460">—</div>
+        <div class="s" id="s1460s">suporte macro de bear</div>
+      </div>
+    </div>
+    <div class="cell">
+      <div class="card">
+        <div class="k">média 200 semanas</div>
+        <div class="v" id="s200">—</div>
+        <div class="s" id="s200s">mesmo papel de fundo de longo prazo</div>
+      </div>
+    </div>
+  </div>
+  <div id="foot" class="row">
+    <div class="cell" id="err"></div>
+    <div class="cell" style="text-align:right" id="age"><a href="./" style="color:#ffd166">← operacional</a> · ciclo</div>
+  </div>
+
+<script>
+var BASE='https://api.binance.com/api/v3';
+function $(id){ return document.getElementById(id); }
+function xhr(url, cb){
+  var x=new XMLHttpRequest();
+  x.open('GET',url,true);
+  x.onreadystatechange=function(){
+    if(x.readyState===4){
+      if(x.status===200){ try{ cb(null, JSON.parse(x.responseText)); }catch(e){ cb(e);} }
+      else cb(new Error('HTTP '+x.status));
+    }
+  };
+  x.onerror=function(){ cb(new Error('rede')); };
+  x.send(null);
+}
+function smaAt(arr, n, idx){
+  if(idx+1<n) return null;
+  var s=0,i;
+  for(i=idx-n+1;i<=idx;i++) s+=arr[i];
+  return s/n;
+}
+function smaLast(arr,n){
+  return smaAt(arr,n,arr.length-1);
+}
+function fmtP(n){
+  if(n==null||isNaN(n)) return '—';
+  n=Math.round(n); var s=String(n),out='',c=0,i;
+  for(i=s.length-1;i>=0;i--){ out=s.charAt(i)+out; c++; if(c===3&&i>0){out=','+out;c=0;} }
+  return '$'+out;
+}
+function fmtN(n,d){
+  if(n==null||isNaN(n)) return '—';
+  d=d==null?1:d; var m=Math.pow(10,d);
+  return (Math.round(n*m)/m).toFixed(d);
+}
+function pct(a,b){ if(!a||!b) return null; return (a-b)/b*100; }
+function setV(id,t,cls){ var el=$(id); el.innerHTML=t; el.className='v '+(cls||'w'); }
+function nowStr(){
+  var d=new Date(); function z(n){return n<10?'0'+n:n;}
+  return z(d.getHours())+':'+z(d.getMinutes());
+}
+function closes(kl){ var a=[],i; for(i=0;i<kl.length;i++) a.push(parseFloat(kl[i][4])); return a; }
+
+var daily=[], weekly=[], price=null, chg=null;
+
+function regime(){
+  var s365=smaLast(closes(daily),365);
+  var s1460=smaLast(closes(daily),1460);
+  var s200=smaLast(closes(weekly),200);
+  var box=$('status'), val=$('stVal'), why=$('stWhy');
+  if(!price || !s365){
+    box.style.background='#222'; val.innerHTML='AGUARDANDO'; return;
+  }
+  var p365=pct(price,s365);
+  var p1460=s1460?pct(price,s1460):null;
+  var p200=s200?pct(price,s200):null;
+
+  if(price>=s365 && (s1460==null || price>=s1460)){
+    box.style.background='#0d2a18';
+    val.className='val g';
+    val.innerHTML='BULL TÉCNICO';
+    why.innerHTML='preço acima da média de 1 ano'+
+      (s1460? ' e da média de 4 anos':'')+
+      ' · ciclo de alta vigente';
+  } else if(s1460 && price<=s1460*1.03){
+    box.style.background='#1a2030';
+    val.className='val c';
+    val.innerHTML='ZONA DE FUNDO MACRO';
+    why.innerHTML='perto da média de 4 anos / 200 semanas · suporte histórico de bear';
+  } else if(price<s365){
+    box.style.background='#3a2a10';
+    val.className='val y';
+    val.innerHTML='ABAIXO DO DIVISOR';
+    why.innerHTML='preço sob a média de 365 dias · bull técnico ainda não confirmado';
+  } else {
+    box.style.background='#222';
+    val.className='val w';
+    val.innerHTML='TRANSIÇÃO';
+    why.innerHTML='estrutura mista entre as médias longas';
+  }
+
+  setV('price', fmtP(price),'w');
+  $('chg').innerHTML = chg==null?'':((chg>=0?'+':'')+fmtN(chg,2)+'% 24h');
+  $('chg').className='s '+(chg>=0?'g':'r');
+
+  if(s365){
+    setV('s365', fmtP(s365), p365>=0?'g':'r');
+    $('s365s').innerHTML=(p365>=0?'preço +':'preço ')+fmtN(p365,1)+'% vs 365d';
+  }
+  if(s1460){
+    setV('s1460', fmtP(s1460), p1460>=0?'g':'r');
+    $('s1460s').innerHTML=(p1460>=0?'preço +':'preço ')+fmtN(p1460,1)+'% vs 4 anos';
+  } else {
+    setV('s1460','—');
+    $('s1460s').innerHTML='precisa de ~4 anos de candles';
+  }
+  if(s200){
+    setV('s200', fmtP(s200), p200>=0?'g':'y');
+    $('s200s').innerHTML=(p200>=0?'preço +':'preço ')+fmtN(p200,1)+'% vs 200w';
+  }
+  $('age').innerHTML=nowStr()+' · ciclo.html';
+}
+
+function draw(){
+  var cv=$('cv'), box=$('chartBox');
+  if(!cv || weekly.length<10) return;
+  var w=box.clientWidth, h=box.clientHeight;
+  if(w<20||h<20){ w=900; h=320; }
+  cv.width=w; cv.height=h;
+  var ctx=cv.getContext('2d');
+  ctx.fillStyle='#0a0a0a'; ctx.fillRect(0,0,w,h);
+
+  var dCl=closes(daily);
+  var wCl=closes(weekly);
+  var show=weekly.length>160? weekly.slice(weekly.length-160): weekly;
+  var n=show.length, i;
+
+  /* map daily SMA onto weekly timestamps */
+  function smaOnWeek(periodDays, weekTs){
+    var j, last=null;
+    for(j=0;j<daily.length;j++){
+      if(daily[j][0]<=weekTs) last=j;
+    }
+    if(last==null) return null;
+    return smaAt(dCl, periodDays, last);
+  }
+
+  var hi=-1e12, lo=1e12;
+  var line365=[], line1460=[], line200=[];
+  for(i=0;i<n;i++){
+    var hh=parseFloat(show[i][2]), ll=parseFloat(show[i][3]);
+    if(hh>hi)hi=hh; if(ll<lo)lo=ll;
+    var ts=show[i][0];
+    line365[i]=smaOnWeek(365, ts);
+    line1460[i]=smaOnWeek(1460, ts);
+    var wIdx=weekly.length-n+i;
+    line200[i]=smaAt(wCl,200,wIdx);
+    if(line365[i]&&line365[i]>hi)hi=line365[i];
+    if(line365[i]&&line365[i]<lo)lo=line365[i];
+    if(line1460[i]&&line1460[i]>hi)hi=line1460[i];
+    if(line1460[i]&&line1460[i]<lo)lo=line1460[i];
+    if(line200[i]&&line200[i]>hi)hi=line200[i];
+    if(line200[i]&&line200[i]<lo)lo=line200[i];
+  }
+  var pad=hi-lo; if(pad<=0)pad=1;
+  hi+=pad*0.06; lo-=pad*0.06;
+  var span=hi-lo;
+  var left=6,right=6,top=20,bot=8;
+  var cw=w-left-right, ch=h-top-bot;
+  function Y(p){ return top+ch*(hi-p)/span; }
+
+  ctx.strokeStyle='#1c1c1c'; ctx.lineWidth=1;
+  for(i=0;i<4;i++){
+    var y=top+ch*i/3;
+    ctx.beginPath(); ctx.moveTo(left,y); ctx.lineTo(left+cw,y); ctx.stroke();
+    ctx.fillStyle='#555'; ctx.font='10px Helvetica';
+    ctx.fillText(fmtP(hi-span*i/3), left+4, y+11);
+  }
+
+  var gap=cw/n, body=Math.max(2,gap*0.55);
+  for(i=0;i<n;i++){
+    var o=parseFloat(show[i][1]), hh=parseFloat(show[i][2]), ll=parseFloat(show[i][3]), c=parseFloat(show[i][4]);
+    var up=c>=o, x=left+i*gap+gap/2;
+    ctx.strokeStyle=up?'#3ddc84':'#ff5a5a';
+    ctx.beginPath(); ctx.moveTo(x,Y(hh)); ctx.lineTo(x,Y(ll)); ctx.stroke();
+    var y1=Y(o), y2=Y(c);
+    var topB=Math.min(y1,y2), bh=Math.max(1,Math.abs(y2-y1));
+    ctx.fillStyle=up?'#3ddc84':'#ff5a5a';
+    ctx.fillRect(x-body/2, topB, body, bh);
+  }
+
+  function strokeLine(arr, color, width){
+    ctx.strokeStyle=color; ctx.lineWidth=width||2;
+    ctx.beginPath();
+    var started=false;
+    for(i=0;i<n;i++){
+      if(arr[i]==null) continue;
+      var x=left+i*gap+gap/2, y=Y(arr[i]);
+      if(!started){ ctx.moveTo(x,y); started=true; }
+      else ctx.lineTo(x,y);
+    }
+    ctx.stroke();
+  }
+  strokeLine(line365,'#3ddc84',2);
+  strokeLine(line1460,'#4ea2ff',2);
+  strokeLine(line200,'#ffd166',2);
+}
+
+function loadDaily(cb){
+  /* 1000 + 500 para cobrir 1460 dias */
+  xhr(BASE+'/klines?symbol=BTCUSDT&interval=1d&limit=1000', function(err,a){
+    if(err){ cb(err); return; }
+    var start=a[0][0]-1;
+    xhr(BASE+'/klines?symbol=BTCUSDT&interval=1d&endTime='+start+'&limit=600', function(err2,b){
+      if(err2){ daily=a; cb(); return; }
+      daily=b.concat(a);
+      cb();
+    });
+  });
+}
+
+var busy=false;
+function refresh(){
+  if(busy) return;
+  busy=true;
+  $('err').innerHTML='';
+  var left=3, first=null;
+  function one(err){
+    if(err&&!first) first=err;
+    left--;
+    if(left<=0){
+      busy=false;
+      if(first) $('err').innerHTML='falha: '+first.message;
+      regime();
+      draw();
+    }
+  }
+  xhr(BASE+'/ticker/24hr?symbol=BTCUSDT', function(err,d){
+    if(err){ one(err); return; }
+    price=parseFloat(d.lastPrice);
+    chg=parseFloat(d.priceChangePercent);
+    one();
+  });
+  loadDaily(one);
+  xhr(BASE+'/klines?symbol=BTCUSDT&interval=1w&limit=260', function(err,d){
+    if(err){ one(err); return; }
+    weekly=d; one();
+  });
+}
+
+refresh();
+setInterval(refresh, 180000);
+setTimeout(draw, 900);
+</script>
+</body>
+</html>
